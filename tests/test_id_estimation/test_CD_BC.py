@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Module for testing the Binomial ID estimator."""
+"""Module for testing the correlaion dimension and box counting ID estimators."""
 
 
 import os
@@ -22,20 +22,41 @@ import numpy as np
 import pytest
 
 from dadapy import IdEstimation
+from dadapy._utils.id_estimation import box_counting as BC
+from dadapy._utils.id_estimation import correlation_integral as CD
 
 filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
 
 X = np.load(filename)
 
 
-def test_compute_id_binomial():
+def test_compute_id_CD_BC():
     """Test that the id estimations with the binomial estimator works correctly."""
     np.random.seed(0)
 
-    ie = IdEstimation(coordinates=X)
+    ie = IdEstimation(coordinates=X, maxk=len(X) - 1)
+    ie.compute_distances()
 
-    id_b = ie.compute_id_binomial_rk(0.2, 0.5)
-    assert id_b == pytest.approx([2.08426, 0.33112, 0.150000], abs=1e-4, rel=1e-2)
+    id_cd, _ = CD(ie.distances, np.linspace(0.25, 1.75, 10), plot=False)
+    assert id_cd == pytest.approx(
+        [
+            1.88925,
+            1.87676,
+            1.91440,
+            1.90752,
+            1.89357,
+            1.87727,
+            1.854341,
+            1.83551,
+            1.81872,
+        ],
+        abs=1e-4,
+        rel=1e-2,
+    )
 
-    id_b = ie.compute_id_binomial_k(5, 0.5)
-    assert id_b == pytest.approx([1.98391, 0.123781, 0.56159], abs=1e-4, rel=1e-2)
+    id_bc, _ = BC(
+        X, (-5, 5), np.linspace(1.0, 3, 10), n_offsets=10, plot=False, verb=False
+    )
+    assert id_bc == pytest.approx(
+        [1.03, 1.27, 1.37, 1.27, 1.31, 1.36, 1.37], abs=1e-2, rel=1e-2
+    )
