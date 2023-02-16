@@ -72,7 +72,8 @@ class Base:
                 self.X = self.X.astype(np.float64, casting="safe")
             else:
                 warnings.warn(
-                    f"data type is {self.X.dtype}: most methods work only with float-type inputs"
+                    f"data type is {self.X.dtype}: most methods work only with float-type inputs",
+                    stacklevel=2,
                 )
 
             self.N = self.X.shape[0]
@@ -109,7 +110,8 @@ class Base:
             elif maxk > (distances[0].shape[1] - 1):
                 maxk = distances[0].shape[1] - 1
                 warnings.warn(
-                    f"maxk requested bigger than number of feautres: setting maxk to {maxk}"
+                    f"maxk requested bigger than number of features: setting maxk to {maxk}",
+                    stacklevel=2,
                 )
 
             N = distances[0].shape[0]
@@ -132,7 +134,8 @@ class Base:
             elif maxk > (distances.shape[1] - 1):
                 maxk = distances.shape[1] - 1
                 warnings.warn(
-                    f"maxk requested bigger than number of feautres: setting maxk to {maxk}"
+                    f"maxk requested bigger than number of features: setting maxk to {maxk}",
+                    stacklevel=2,
                 )
 
             dist, dist_indices = from_all_distances_to_nndistances(distances, maxk)
@@ -196,17 +199,17 @@ class Base:
     # -------------------------------------------------------------------------------
 
     # better to use this formulation which can be applied to _mus_scaling_reduce_func
-    def remove_zero_dists(self):
+    def remove_zero_dists(self, distances):
         """Find zero neighbour distances and substitute the numerical zeros with a very small number.
 
         This method is mostly useful to regularize the computation of certain id estimators.
         """
         # find all distances which are 0
-        indices = np.nonzero(self.distances[:, 1:] < np.finfo(self.dtype).eps)
+        indices = np.nonzero(distances[:, 1:] < np.finfo(self.dtype).eps)
         # set distance to epsilon
-        self.distances[indices] = np.finfo(self.dtype).eps
+        distances[indices] = np.finfo(self.dtype).eps
 
-        pass
+        return distances
 
     def remove_identical_points(self):
         """Find points that are numerically identical and remove them.
